@@ -1,0 +1,5 @@
+To Compile:
+javac org\mapreduce\MapReduceEdited.java
+
+To Run:
+java org.mapreduce.MapReduceEdited numberOfFiles numberOfThreads fileNames....
