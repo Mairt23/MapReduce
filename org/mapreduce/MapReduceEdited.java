@@ -95,6 +95,7 @@ public class MapReduceEdited {
 		System.out.println("Input File:");
 		System.out.println(input);
 		
+		System.out.println("Method 1:");
 		// APPROACH #1: Brute force
 		{
 				Map<String, Map<String, Integer>> output = new HashMap<String, Map<String, Integer>>();
@@ -128,7 +129,7 @@ public class MapReduceEdited {
 				System.out.println(output);
 		}
 
-		
+		System.out.println("Method 2:");
 		// APPROACH #2: MapReduce
 		{
 				Map<String, Map<String, Integer>> output = new HashMap<String, Map<String, Integer>>();
@@ -177,6 +178,7 @@ public class MapReduceEdited {
 				System.out.println(output);
 		}
 		
+		System.out.println("Method 3:");
 		
 		// APPROACH #3: Distributed MapReduce
 		{
@@ -200,6 +202,7 @@ public class MapReduceEdited {
 				ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
 				
 				while(inputIter.hasNext()) {
+					System.out.println("Got here");
 					Map.Entry<String, String> entry = inputIter.next();
 					final String file = entry.getKey();
 					final String contents = entry.getValue();
@@ -295,6 +298,10 @@ public class MapReduceEdited {
 
 	public static void map(String file, String contents, List<MappedItem> mappedItems) {
 			String[] words = contents.trim().split("\\s+");
+			for (int i = 0; i < words.length; i++)
+			{
+				System.out.println(words[i]);
+			}
 			for(String word: words) {
 					mappedItems.add(new MappedItem(word, file));
 			}
