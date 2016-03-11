@@ -1,6 +1,7 @@
 package org.mapreduce;
 
 import java.io.*;
+import java.util.concurrent.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -63,6 +64,8 @@ public class MapReduceEdited {
 			}
 		}*/
 		int numFiles = Integer.parseInt(args[0]);
+		int numThreads = Integer.parseInt(args[1]);
+		
 		for(int i = 0; i < numFiles; i++)
 		{
 			try
@@ -73,8 +76,13 @@ public class MapReduceEdited {
 				while ((line = bufferReader.readLine()) != null)
 				{
 					String temp = input.get(args[i+2]);
-					temp = temp + line + " ";
-					input.put(args[i+2], temp);
+					if (temp != null){
+						temp = temp + line + " ";
+						input.put(args[i+2], temp);
+					}
+					else{
+						input.put(args[i+2], line + " ");
+					}
 				}
 			}
 			catch(Exception e)
@@ -188,7 +196,23 @@ public class MapReduceEdited {
 				List<Thread> mapCluster = new ArrayList<Thread>(input.size());
 				
 				Iterator<Map.Entry<String, String>> inputIter = input.entrySet().iterator();
+				
+				ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
+				
 				while(inputIter.hasNext()) {
+					Map.Entry<String, String> entry = inputIter.next();
+					final String file = entry.getKey();
+					final String contents = entry.getValue();
+					threadPool.execute(new Thread(new Runnable() {
+								@Override
+			public void run() {
+										map(file, contents, mapCallback);
+			}
+						}));
+				}
+				
+				threadPool.shutdown();
+				/*while(inputIter.hasNext()) {
 						Map.Entry<String, String> entry = inputIter.next();
 						final String file = entry.getKey();
 						final String contents = entry.getValue();
@@ -201,16 +225,16 @@ public class MapReduceEdited {
 						});
 						mapCluster.add(t);
 						t.start();
-				}
+				}*/
 				
 				// wait for mapping phase to be over:
-				for(Thread t : mapCluster) {
+				/*for(Thread t : mapCluster) {
 						try {
 								t.join();
 						} catch(InterruptedException e) {
 								throw new RuntimeException(e);
 						}
-				}
+				}*/
 				
 				// GROUP:
 				
