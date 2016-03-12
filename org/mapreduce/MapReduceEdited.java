@@ -172,9 +172,10 @@ public class MapReduceEdited {
 				final Map<String, Map<String, Integer>> output = new HashMap<String, Map<String, Integer>>();
 				
 				// MAP:
-				
+				//Create CopyOnWriteArrayList
 				final List<MappedItem> mappedItems = new LinkedList<MappedItem>();
 				
+				//Get rid of this code???
 				final MapCallback<String, MappedItem> mapCallback = new MapCallback<String, MappedItem>() {
 						@Override
 		public synchronized void mapDone(String file, List<MappedItem> results) {
@@ -196,6 +197,7 @@ public class MapReduceEdited {
 					mapThreadPool.execute(new Thread(new Runnable() {
 						@Override
 						public void run() {
+							//Pass in CopyOnWriteArrayList instead of mapCallback
 							map(file, contents, mapCallback);
 						}
 					}));
@@ -223,6 +225,8 @@ public class MapReduceEdited {
 				}
 				
 				// REDUCE:
+				
+				//Modifications (part 3) mirror those of map phase
 				
 				final ReduceCallback<String, String, Integer> reduceCallback = new ReduceCallback<String, String, Integer>() {
 						@Override
@@ -288,6 +292,7 @@ public class MapReduceEdited {
 			for(String word: words) {
 					results.add(new MappedItem(word, file));
 			}
+			//Just call CopyOnWriteArrayList.add
 			callback.mapDone(file, results);
 	}
 	
