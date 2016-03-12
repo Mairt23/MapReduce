@@ -199,22 +199,24 @@ public class MapReduceEdited {
 				
 				Iterator<Map.Entry<String, String>> inputIter = input.entrySet().iterator();
 				
-				ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
+				ExecutorService mapThreadPool = Executors.newFixedThreadPool(numThreads);
 				
 				while(inputIter.hasNext()) {
-					System.out.println("Got here");
+					//System.out.println("Got here");
 					Map.Entry<String, String> entry = inputIter.next();
 					final String file = entry.getKey();
 					final String contents = entry.getValue();
-					threadPool.execute(new Thread(new Runnable() {
-								@Override
-			public void run() {
-										map(file, contents, mapCallback);
-			}
-						}));
+					mapThreadPool.execute(new Thread(new Runnable() {
+						@Override
+						public void run() {
+							map(file, contents, mapCallback);
+						}
+					}));
 				}
 				
-				threadPool.shutdown();
+				mapThreadPool.shutdown();
+				
+				while(!mapThreadPool.isTerminated()){}
 				/*while(inputIter.hasNext()) {
 						Map.Entry<String, String> entry = inputIter.next();
 						final String file = entry.getKey();
@@ -268,7 +270,26 @@ public class MapReduceEdited {
 				List<Thread> reduceCluster = new ArrayList<Thread>(groupedItems.size());
 				
 				Iterator<Map.Entry<String, List<String>>> groupedIter = groupedItems.entrySet().iterator();
-				while(groupedIter.hasNext()) {
+				
+				ExecutorService reduceThreadPool = Executors.newFixedThreadPool(numThreads);
+				
+				while(groupedIter.hasNext()){
+					Map.Entry<String, List<String>> entry = groupedIter.next();
+					final String word = entry.getKey();
+					final List<String> list = entry.getValue();
+					reduceThreadPool.execute(new Thread(new Runnable() {
+						@Override
+						public void run() {
+							reduce(word, list, reduceCallback);
+						}
+						}));
+				}
+				
+				reduceThreadPool.shutdown();
+				
+				while(!reduceThreadPool.isTerminated()){}
+				
+				/*while(groupedIter.hasNext()) {
 						Map.Entry<String, List<String>> entry = groupedIter.next();
 						final String word = entry.getKey();
 						final List<String> list = entry.getValue();
@@ -290,7 +311,7 @@ public class MapReduceEdited {
 						} catch(InterruptedException e) {
 								throw new RuntimeException(e);
 						}
-				}
+				}*/
 				
 				System.out.println(output);
 		}
@@ -298,10 +319,10 @@ public class MapReduceEdited {
 
 	public static void map(String file, String contents, List<MappedItem> mappedItems) {
 			String[] words = contents.trim().split("\\s+");
-			for (int i = 0; i < words.length; i++)
+			/*for (int i = 0; i < words.length; i++)
 			{
 				System.out.println(words[i]);
-			}
+			}*/
 			for(String word: words) {
 					mappedItems.add(new MappedItem(word, file));
 			}
@@ -327,6 +348,10 @@ public class MapReduceEdited {
 	
 	public static void map(String file, String contents, MapCallback<String, MappedItem> callback) {
 			String[] words = contents.trim().split("\\s+");
+			/*for (int i = 0; i < words.length; i++)
+			{
+				System.out.println(words[i]);
+			}*/
 			List<MappedItem> results = new ArrayList<MappedItem>(words.length);
 			for(String word: words) {
 					results.add(new MappedItem(word, file));
