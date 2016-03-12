@@ -49,20 +49,7 @@ public class MapReduceEdited {
 		
 		
 		Map<String, String> input = new HashMap<String, String>();
-		//input.put("file1.txt", "foo foo bar cat dog dog");
-		//input.put("file2.txt", "foo house cat cat dog");
-		//input.put("file3.txt", "foo foo foo bird");
 		
-		/*for(int i = 0; i < args[0]; i++)
-		{
-			for(String line : Files.readAllLines(Paths.get(args[i+2])))
-			{
-				for(String word : line.split(" "))
-				{
-					input.put(args[i+2], word);
-				}
-			}
-		}*/
 		int numFiles = Integer.parseInt(args[0]);
 		int numThreads = Integer.parseInt(args[1]);
 		
@@ -217,29 +204,6 @@ public class MapReduceEdited {
 				mapThreadPool.shutdown();
 				
 				while(!mapThreadPool.isTerminated()){}
-				/*while(inputIter.hasNext()) {
-						Map.Entry<String, String> entry = inputIter.next();
-						final String file = entry.getKey();
-						final String contents = entry.getValue();
-						
-						Thread t = new Thread(new Runnable() {
-								@Override
-			public void run() {
-										map(file, contents, mapCallback);
-			}
-						});
-						mapCluster.add(t);
-						t.start();
-				}*/
-				
-				// wait for mapping phase to be over:
-				/*for(Thread t : mapCluster) {
-						try {
-								t.join();
-						} catch(InterruptedException e) {
-								throw new RuntimeException(e);
-						}
-				}*/
 				
 				// GROUP:
 				
@@ -289,40 +253,12 @@ public class MapReduceEdited {
 				
 				while(!reduceThreadPool.isTerminated()){}
 				
-				/*while(groupedIter.hasNext()) {
-						Map.Entry<String, List<String>> entry = groupedIter.next();
-						final String word = entry.getKey();
-						final List<String> list = entry.getValue();
-						
-						Thread t = new Thread(new Runnable() {
-								@Override
-			public void run() {
-										reduce(word, list, reduceCallback);
-								}
-						});
-						reduceCluster.add(t);
-						t.start();
-				}
-				
-				// wait for reducing phase to be over:
-				for(Thread t : reduceCluster) {
-						try {
-								t.join();
-						} catch(InterruptedException e) {
-								throw new RuntimeException(e);
-						}
-				}*/
-				
 				System.out.println(output);
 		}
 }
 
 	public static void map(String file, String contents, List<MappedItem> mappedItems) {
 			String[] words = contents.trim().split("\\s+");
-			/*for (int i = 0; i < words.length; i++)
-			{
-				System.out.println(words[i]);
-			}*/
 			for(String word: words) {
 					mappedItems.add(new MappedItem(word, file));
 			}
@@ -348,10 +284,6 @@ public class MapReduceEdited {
 	
 	public static void map(String file, String contents, MapCallback<String, MappedItem> callback) {
 			String[] words = contents.trim().split("\\s+");
-			/*for (int i = 0; i < words.length; i++)
-			{
-				System.out.println(words[i]);
-			}*/
 			List<MappedItem> results = new ArrayList<MappedItem>(words.length);
 			for(String word: words) {
 					results.add(new MappedItem(word, file));
