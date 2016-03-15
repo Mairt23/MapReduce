@@ -286,10 +286,6 @@ public class MapReduceEdited {
 					}
 			}
 			output.put(word, reducedList);
-			
-			long stopTime = System.currentTimeMillis();
-      		long elapsedTime = stopTime - startTime;
-      		System.out.println(elapsedTime);
 	}
 	
 	public static interface MapCallback<E, V> {
