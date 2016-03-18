@@ -121,6 +121,9 @@ public class MapReduceEdited {
 				
 				// show me:
 				System.out.println(output);
+				long stopTime = System.currentTimeMillis();
+      			long elapsedTime = stopTime - startTime;
+      			System.out.printf("Time taken for method 1 in milliseconds: %d\n", elapsedTime);
 		}
 
 		System.out.println("Method 2:");
@@ -170,25 +173,28 @@ public class MapReduceEdited {
 				}
 				
 				System.out.println(output);
+				long stopTime = System.currentTimeMillis();
+      			long elapsedTime = stopTime - startTime;
+      			System.out.printf("Time taken for method 2 in milliseconds: %d\n", elapsedTime);
 		}
 		
 		System.out.println("Method 3:");
 		
 		// APPROACH #3: Distributed MapReduce
 		{
-				final Map<String, Map<String, Integer>> output = new HashMap<String, Map<String, Integer>>();
+				
 				
 				// MAP:
 				//Create CopyOnWriteArrayList
-				final List<MappedItem> mappedItems = new LinkedList<MappedItem>();
-				
+				//final List<MappedItem> mappedItems = new LinkedList<MappedItem>();
+				final List<MappedItem> mappedItems = new CopyOnWriteArrayList<MappedItem>();
 				//Get rid of this code???
-				final MapCallback<String, MappedItem> mapCallback = new MapCallback<String, MappedItem>() {
+				/*final MapCallback<String, MappedItem> mapCallback = new MapCallback<String, MappedItem>() {
 						@Override
 		public synchronized void mapDone(String file, List<MappedItem> results) {
 			mappedItems.addAll(results);
 		}
-				};
+				};*/
 				
 				List<Thread> mapCluster = new ArrayList<Thread>(input.size());
 				
@@ -205,7 +211,7 @@ public class MapReduceEdited {
 						@Override
 						public void run() {
 							//Pass in CopyOnWriteArrayList instead of mapCallback
-							map(file, contents, mapCallback);
+							map(file, contents, mappedItems);
 						}
 					}));
 				}
@@ -232,15 +238,15 @@ public class MapReduceEdited {
 				}
 				
 				// REDUCE:
-				
+				final Map<String, Map<String, Integer>> output = new ConcurrentHashMap<String, Map<String, Integer>>();
 				//Modifications (part 3) mirror those of map phase
 				
-				final ReduceCallback<String, String, Integer> reduceCallback = new ReduceCallback<String, String, Integer>() {
+				/*final ReduceCallback<String, String, Integer> reduceCallback = new ReduceCallback<String, String, Integer>() {
 						@Override
 		public synchronized void reduceDone(String k, Map<String, Integer> v) {
 				output.put(k, v);
 		}
-				};
+				};*/
 				
 				List<Thread> reduceCluster = new ArrayList<Thread>(groupedItems.size());
 				
@@ -255,7 +261,7 @@ public class MapReduceEdited {
 					reduceThreadPool.execute(new Thread(new Runnable() {
 						@Override
 						public void run() {
-							reduce(word, list, reduceCallback);
+							reduce(word, list, output);
 						}
 						}));
 				}
@@ -265,6 +271,9 @@ public class MapReduceEdited {
 				while(!reduceThreadPool.isTerminated()){}
 				
 				System.out.println(output);
+				long stopTime = System.currentTimeMillis();
+      			long elapsedTime = stopTime - startTime;
+      			System.out.printf("Time taken for method 3 in milliseconds: %d\n", elapsedTime);
 		}
 }
 
@@ -288,19 +297,17 @@ public class MapReduceEdited {
 			output.put(word, reducedList);
 	}
 	
-	public static interface MapCallback<E, V> {
-			
-			public void mapDone(E key, List<V> values);
-	}
+	//got rid of mapcallback.  
 	
-	public static void map(String file, String contents, MapCallback<String, MappedItem> callback) {
+	public static void map(String file, String contents, CopyOnWriteArrayList<MappedItem> mappeditems) {
 			String[] words = contents.trim().split("\\s+");
 			List<MappedItem> results = new ArrayList<MappedItem>(words.length);
 			for(String word: words) {
 					results.add(new MappedItem(word, file));
 			}
 			//Just call CopyOnWriteArrayList.add
-			callback.mapDone(file, results);
+			//callback.mapDone(file, results);
+			mappeditems.addAll(results);
 	}
 	
 	public static interface ReduceCallback<E, K, V> {
@@ -308,7 +315,7 @@ public class MapReduceEdited {
 			public void reduceDone(E e, Map<K,V> results);
 	}
 	
-	public static void reduce(String word, List<String> list, ReduceCallback<String, String, Integer> callback) {
+	public static void reduce(String word, List<String> list, ConcurrentHashMap<String, Map<String, Integer>> output) {
 			
 			Map<String, Integer> reducedList = new HashMap<String, Integer>();
 			for(String file: list) {
@@ -319,7 +326,7 @@ public class MapReduceEdited {
 							reducedList.put(file, occurrences.intValue() + 1);
 					}
 			}
-			callback.reduceDone(word, reducedList);
+			output.put(word, reducedList)
 	}
 	
 	private static class MappedItem { 
