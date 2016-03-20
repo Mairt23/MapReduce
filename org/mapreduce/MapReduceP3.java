@@ -10,13 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.lang.*;
 
-public class MapReduceEdited {
+public class MapReduceP3 {
     
 	//arg1 = number of text files
 	//arg2 = number of threads
 	//All other args are textfile names
 	public static void main(String[] args) {
-		long startTime = System.currentTimeMillis();
 		
 		// the problem:
 		
@@ -52,25 +51,25 @@ public class MapReduceEdited {
 		
 		Map<String, String> input = new HashMap<String, String>();
 		
-		int numFiles = Integer.parseInt(args[0]);
-		int numThreads = Integer.parseInt(args[1]);
+		int numFiles = args.length - 1;
+		int numThreads = Integer.parseInt(args[0]);
 		
 		for(int i = 0; i < numFiles; i++)
 		{
 			try
 			{
-				FileReader inFile = new FileReader(args[i+2]);
+				FileReader inFile = new FileReader(args[i+1]);
 				BufferedReader bufferReader = new BufferedReader(inFile);
 				String line;
 				while ((line = bufferReader.readLine()) != null)
 				{
-					String temp = input.get(args[i+2]);
+					String temp = input.get(args[i+1]);
 					if (temp != null){
 						temp = temp + line + " ";
-						input.put(args[i+2], temp);
+						input.put(args[i+1], temp);
 					}
 					else{
-						input.put(args[i+2], line + " ");
+						input.put(args[i+1], line + " ");
 					}
 				}
 			}
@@ -81,10 +80,13 @@ public class MapReduceEdited {
 		}
 		
 		
-		System.out.println("Input File:");
-		System.out.println(input);
+		//System.out.println("Input File(s):");
+		//System.out.println(input);
+		long startTime = System.nanoTime();
 		
+		System.out.println();
 		System.out.println("Method 1:");
+		System.out.println();
 		// APPROACH #1: Brute force
 		{
 			Map<String, Map<String, Integer>> output = new HashMap<String, Map<String, Integer>>();
@@ -114,14 +116,16 @@ public class MapReduceEdited {
 					}
 			}
 			
-			// show me:
-			System.out.println(output);
-			long stopTime = System.currentTimeMillis();
-			long elapsedTime = stopTime - startTime;
-			System.out.printf("Time taken for method 1 in milliseconds: %d\n", elapsedTime);
+			//System.out.println(output);
+			
 		}
+		long stopTime1 = System.nanoTime();
+		long elapsedTime = stopTime1 - startTime;
+		System.out.printf("Time taken for method 1 in nanoseconds: %d\n", elapsedTime);
 
+		System.out.println();
 		System.out.println("Method 2:");
+		System.out.println();
 		// APPROACH #2: MapReduce
 		{
 			Map<String, Map<String, Integer>> output = new HashMap<String, Map<String, Integer>>();
@@ -132,11 +136,11 @@ public class MapReduceEdited {
 			
 			Iterator<Map.Entry<String, String>> inputIter = input.entrySet().iterator();
 			while(inputIter.hasNext()) {
-					Map.Entry<String, String> entry = inputIter.next();
-					String file = entry.getKey();
-					String contents = entry.getValue();
-					
-					map(file, contents, mappedItems);
+				Map.Entry<String, String> entry = inputIter.next();
+				String file = entry.getKey();
+				String contents = entry.getValue();
+				
+				map(file, contents, mappedItems);
 			}
 			
 			// GROUP:
@@ -145,56 +149,54 @@ public class MapReduceEdited {
 			
 			Iterator<MappedItem> mappedIter = mappedItems.iterator();
 			while(mappedIter.hasNext()) {
-					MappedItem item = mappedIter.next();
-					String word = item.getWord();
-					String file = item.getFile();
-					List<String> list = groupedItems.get(word);
-					if (list == null) {
-							list = new LinkedList<String>();
-							groupedItems.put(word, list);
-					}
-					list.add(file);
+				MappedItem item = mappedIter.next();
+				String word = item.getWord();
+				String file = item.getFile();
+				List<String> list = groupedItems.get(word);
+				if (list == null) {
+					list = new LinkedList<String>();
+					groupedItems.put(word, list);
+				}
+				list.add(file);
 			}
 			
 			// REDUCE:
 			
 			Iterator<Map.Entry<String, List<String>>> groupedIter = groupedItems.entrySet().iterator();
 			while(groupedIter.hasNext()) {
-					Map.Entry<String, List<String>> entry = groupedIter.next();
-					String word = entry.getKey();
-					List<String> list = entry.getValue();
-					
-					reduce(word, list, output);
+				Map.Entry<String, List<String>> entry = groupedIter.next();
+				String word = entry.getKey();
+				List<String> list = entry.getValue();
+				
+				reduce(word, list, output);
 			}
 			
-			System.out.println(output);
-			long stopTime = System.currentTimeMillis();
-			long elapsedTime = stopTime - startTime;
-			System.out.printf("Time taken for method 2 in milliseconds: %d\n", elapsedTime);
+			//System.out.println(output);
+			
 		}
+		long stopTime2 = System.nanoTime();
+		elapsedTime = stopTime2 - stopTime1;
+		System.out.printf("Time taken for method 2 in nanoseconds: %d\n", elapsedTime);
 		
+		System.out.println();
 		System.out.println("Method 3:");
-		
+		System.out.println();
 		// APPROACH #3: Distributed MapReduce
 		{
 			// MAP:
 			final List<MappedItem> mappedItems = new CopyOnWriteArrayList<MappedItem>();
-			
-			List<Thread> mapCluster = new ArrayList<Thread>(input.size());
 			
 			Iterator<Map.Entry<String, String>> inputIter = input.entrySet().iterator();
 			
 			ExecutorService mapThreadPool = Executors.newFixedThreadPool(numThreads);
 			
 			while(inputIter.hasNext()) {
-				//System.out.println("Got here");
 				Map.Entry<String, String> entry = inputIter.next();
 				final String file = entry.getKey();
 				final String contents = entry.getValue();
 				mapThreadPool.execute(new Thread(new Runnable() {
 					@Override
 					public void run() {
-						//Pass in CopyOnWriteArrayList instead of mapCallback
 						map(file, contents, mappedItems);
 					}
 				}));
@@ -223,16 +225,6 @@ public class MapReduceEdited {
 			
 			// REDUCE:
 			final Map<String, Map<String, Integer>> output = new ConcurrentHashMap<String, Map<String, Integer>>();
-			//Modifications (part 3) mirror those of map phase
-			
-			/*final ReduceCallback<String, String, Integer> reduceCallback = new ReduceCallback<String, String, Integer>() {
-					@Override
-	public synchronized void reduceDone(String k, Map<String, Integer> v) {
-			output.put(k, v);
-	}
-			};*/
-			
-			List<Thread> reduceCluster = new ArrayList<Thread>(groupedItems.size());
 			
 			Iterator<Map.Entry<String, List<String>>> groupedIter = groupedItems.entrySet().iterator();
 			
@@ -254,11 +246,12 @@ public class MapReduceEdited {
 			
 			while(!reduceThreadPool.isTerminated()){}
 			
-			System.out.println(output);
-			long stopTime = System.currentTimeMillis();
-			long elapsedTime = stopTime - startTime;
-			System.out.printf("Time taken for method 3 in milliseconds: %d\n", elapsedTime);
+			//System.out.println(output);
+			
 		}
+		long stopTime3 = System.nanoTime();
+		elapsedTime = stopTime3 - stopTime2;
+		System.out.printf("Time taken for method 3 in nanoseconds: %d\n", elapsedTime);
 }
 
 	public static void map(String file, String contents, List<MappedItem> mappedItems) {
@@ -279,9 +272,7 @@ public class MapReduceEdited {
 					}
 			}
 			output.put(word, reducedList);
-	}
-	
-	//got rid of mapcallback.  
+	}  
 	
 	public static void map(String file, String contents, CopyOnWriteArrayList<MappedItem> mappeditems) {
 			String[] words = contents.trim().split("\\s+");
@@ -289,14 +280,7 @@ public class MapReduceEdited {
 			for(String word: words) {
 					results.add(new MappedItem(word, file));
 			}
-			//Just call CopyOnWriteArrayList.add
-			//callback.mapDone(file, results);
 			mappeditems.addAll(results);
-	}
-	
-	public static interface ReduceCallback<E, K, V> {
-			
-			public void reduceDone(E e, Map<K,V> results);
 	}
 	
 	public static void reduce(String word, List<String> list, ConcurrentHashMap<String, Map<String, Integer>> output) {
