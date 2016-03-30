@@ -54,6 +54,8 @@ public class MapReduceP1P2 {
 		int numFiles = args.length - 1;
 		int numThreads = Integer.parseInt(args[0]);
 		
+		System.out.println("Reading from text files...");
+		
 		for(int i = 0; i < numFiles; i++)
 		{
 			try
@@ -79,6 +81,7 @@ public class MapReduceP1P2 {
 			}
 		}
 		
+		System.out.println("Finished reading from text files...");
 		
 		//System.out.println("Input File(s):");
 		//System.out.println(input);

@@ -12,8 +12,7 @@ import java.lang.*;
 
 public class MapReduceP3 {
     
-	//arg1 = number of text files
-	//arg2 = number of threads
+	//arg1 = number of threads
 	//All other args are textfile names
 	public static void main(String[] args) {
 		
@@ -54,6 +53,8 @@ public class MapReduceP3 {
 		int numFiles = args.length - 1;
 		int numThreads = Integer.parseInt(args[0]);
 		
+		System.out.println("Reading from text files...");
+		
 		for(int i = 0; i < numFiles; i++)
 		{
 			try
@@ -75,10 +76,11 @@ public class MapReduceP3 {
 			}
 			catch(Exception e)
 			{
-				System.out.println("Error while reading file line by line:" + e.getMessage());
+				System.out.println("Error while reading file line by line: " + e.getMessage());
 			}
 		}
 		
+		System.out.println("Finished reading from text files...");
 		
 		//System.out.println("Input File(s):");
 		//System.out.println(input);
@@ -184,7 +186,7 @@ public class MapReduceP3 {
 		// APPROACH #3: Distributed MapReduce
 		{
 			// MAP:
-			final List<MappedItem> mappedItems = new CopyOnWriteArrayList<MappedItem>();
+			final CopyOnWriteArrayList<MappedItem> mappedItems = new CopyOnWriteArrayList<MappedItem>();
 			
 			Iterator<Map.Entry<String, String>> inputIter = input.entrySet().iterator();
 			
