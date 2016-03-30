@@ -118,7 +118,7 @@ public class MapReduceP3 {
 					}
 			}
 			
-			System.out.println(output);
+			//System.out.println(output);
 			
 		}
 		long stopTime1 = System.nanoTime();
@@ -173,7 +173,7 @@ public class MapReduceP3 {
 				reduce(word, list, output);
 			}
 			
-			System.out.println(output);
+			//System.out.println(output);
 			
 		}
 		long stopTime2 = System.nanoTime();
@@ -248,7 +248,7 @@ public class MapReduceP3 {
 			
 			while(!reduceThreadPool.isTerminated()){}
 			
-			System.out.println(output);
+			//System.out.println(output);
 			
 		}
 		long stopTime3 = System.nanoTime();
